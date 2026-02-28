@@ -1,4 +1,4 @@
-const CACHE_NAME = 'neurobalance-v5';
+const CACHE_NAME = 'neurobalance-v6';
 
 // Get base path from service worker's own location
 const BASE = self.location.pathname.replace('/sw.js', '/');
