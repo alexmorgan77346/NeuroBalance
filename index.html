@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0d1117">
+<meta name="description" content="NeuroBalance — A Science-Based Peace Optimization System">
+<title>NeuroBalance</title>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script>
+  // Dynamically inject manifest with fully absolute URLs (fixes GitHub Pages PWA on mobile)
+  (function() {
+    var origin = window.location.origin;
+    var base = window.location.pathname.replace(/\/[^\/]*$/, '');
+    if (!base.endsWith('/')) base += '/';
+    var fullBase = origin + base;
+
+    var manifest = {
+      name: "NeuroBalance",
+      short_name: "NeuroBalance",
+      description: "A Science-Based Peace Optimization System",
+      start_url: fullBase + "index.html",
+      scope: fullBase,
+      display: "standalone",
+      background_color: "#0a0d10",
+      theme_color: "#0a0d10",
+      orientation: "portrait-primary",
+      icons: [
+        { src: fullBase + "icon-192.png", sizes: "192x192", type: "image/png", purpose: "any maskable" },
+        { src: fullBase + "icon-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" }
+      ]
+    };
+    var blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+    var link = document.createElement('link');
+    link.rel = 'manifest';
+    link.href = URL.createObjectURL(blob);
+    document.head.appendChild(link);
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0d10;
+    --bg2: #111418;
+    --bg3: #181d24;
+    --border: #1e2530;
+    --border2: #252d38;
+    --text: #c8d4e0;
+    --text2: #7a8fa8;
+    --text3: #4a5968;
+    --accent: #4eb8a0;
+    --accent2: #3d9e88;
+    --warm: #d4956a;
+    --cool: #6a9fd4;
+    --purple: #9b7fd4;
+    --danger: #d46a6a;
+    --green: #6ad4a0;
+    --card-radius: 16px;
+    --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* App shell */
+  .app { display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* Header */
+  .header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,13,16,0.92);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 60px;
+  }
+  .logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    color: var(--accent);
+    letter-spacing: -0.3px;
+  }
+  .logo span { color: var(--text2); font-style: italic; font-size: 13px; margin-left: 8px; }
+  .header-actions { display: flex; gap: 8px; align-items: center; }
+  .science-toggle {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--text2);
+    cursor: pointer; user-select: none;
+  }
+  .toggle-switch {
+    width: 36px; height: 20px; background: var(--bg3); border-radius: 10px;
+    position: relative; transition: background var(--transition);
+    border: 1px solid var(--border2);
+  }
+  .toggle-switch.on { background: var(--accent2); border-color: var(--accent); }
+  .toggle-knob {
+    position: absolute; top: 2px; left: 2px;
+    width: 14px; height: 14px; background: white; border-radius: 50%;
+    transition: left var(--transition);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+  }
+  .toggle-switch.on .toggle-knob { left: 18px; }
+
+  /* Nav */
+  .nav {
+    display: flex; gap: 2px;
+    padding: 8px 12px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav-btn {
+    flex-shrink: 0;
+    padding: 6px 14px; border-radius: 8px;
+    border: none; background: none; color: var(--text3);
+    font-family: 'DM Sans', sans-serif; font-size: 13px;
+    cursor: pointer; transition: all var(--transition);
+    font-weight: 400;
+  }
+  .nav-btn:hover { color: var(--text2); background: var(--bg3); }
+  .nav-btn.active { background: var(--bg3); color: var(--accent); border: 1px solid var(--border2); }
+
+  /* Main content */
+  .main { flex: 1; padding: 20px 16px; max-width: 680px; margin: 0 auto; width: 100%; }
+
+  /* Sections */
+  .section { display: none; animation: fadeIn 0.3s ease; }
+  .section.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Cards */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--card-radius);
+    padding: 20px;
+    margin-bottom: 14px;
+    transition: border-color var(--transition);
+  }
+  .card:hover { border-color: var(--border2); }
+  .card-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 17px; color: var(--text);
+    margin-bottom: 4px;
+  }
+  .card-sub { font-size: 12px; color: var(--text3); margin-bottom: 16px; }
+
+  /* Section titles */
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px; color: var(--text);
+    margin-bottom: 4px; line-height: 1.2;
+  }
+  .section-sub { font-size: 13px; color: var(--text2); margin-bottom: 20px; }
+
+  /* Regulation Score */
+  .reg-score-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 28px 20px 20px;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--card-radius); margin-bottom: 14px;
+    position: relative; overflow: hidden;
+  }
+  .reg-score-wrap::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.6;
+  }
+  .score-number {
+    font-family: 'DM Serif Display', serif;
+    font-size: 72px; line-height: 1;
+    color: var(--accent);
+    text-shadow: 0 0 40px rgba(78,184,160,0.3);
+  }
+  .score-label { font-size: 13px; color: var(--text3); margin-top: 4px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .score-status {
+    margin-top: 12px; padding: 4px 14px; border-radius: 20px;
+    font-size: 12px; background: rgba(78,184,160,0.1); color: var(--accent);
+    border: 1px solid rgba(78,184,160,0.2);
+  }
+
+  /* Metrics grid */
+  .metrics-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;
+  }
+  .metric-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px;
+  }
+  .metric-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+  .metric-value { font-size: 22px; font-weight: 300; color: var(--text); margin-bottom: 6px; }
+  .metric-bar { height: 3px; background: var(--bg3); border-radius: 2px; overflow: hidden; }
+  .metric-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
+
+  /* Slider rows */
+  .slider-row { margin-bottom: 16px; }
+  .slider-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .slider-label { font-size: 13px; color: var(--text2); }
+  .slider-val { font-size: 13px; color: var(--text); font-weight: 500; }
+  input[type=range] {
+    width: 100%; -webkit-appearance: none; appearance: none;
+    height: 3px; border-radius: 2px;
+    background: var(--bg3); outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 16px; height: 16px;
+    border-radius: 50%; background: var(--accent);
+    cursor: pointer; box-shadow: 0 0 8px rgba(78,184,160,0.4);
+  }
+  input[type=time], input[type=text] {
+    background: var(--bg3); border: 1px solid var(--border);
+    color: var(--text); padding: 8px 12px; border-radius: 8px;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none;
+    width: 100%;
+  }
+  input[type=time]:focus, input[type=text]:focus { border-color: var(--accent); }
+
+  /* Protocol modes */
+  .protocol-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .protocol-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--card-radius); padding: 18px;
+    cursor: pointer; transition: all var(--transition);
+    position: relative; overflow: hidden;
+  }
+  .protocol-card:hover { border-color: var(--border2); transform: translateY(-1px); }
+  .protocol-card.active { border-color: var(--accent); background: rgba(78,184,160,0.05); }
+  .protocol-icon { font-size: 24px; margin-bottom: 8px; }
+  .protocol-name { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+  .protocol-sys { font-size: 11px; color: var(--text3); }
+  .protocol-detail {
+    margin-top: 14px; padding: 14px; background: var(--bg3);
+    border-radius: 10px; font-size: 13px; color: var(--text2);
+    display: none; line-height: 1.7;
+  }
+  .protocol-detail.show { display: block; }
+  .protocol-detail strong { color: var(--accent); }
+  .protocol-timer {
+    display: flex; align-items: center; gap: 10px; margin-top: 12px;
+  }
+  .timer-btn {
+    padding: 8px 20px; border-radius: 8px; border: 1px solid var(--accent);
+    background: transparent; color: var(--accent);
+    font-family: 'DM Sans', sans-serif; font-size: 13px;
+    cursor: pointer; transition: all var(--transition);
+  }
+  .timer-btn:hover { background: rgba(78,184,160,0.1); }
+  .timer-display { font-size: 20px; font-weight: 300; color: var(--text); min-width: 60px; }
+
+  /* Habit tracker */
+  .habit-list { display: flex; flex-direction: column; gap: 10px; }
+  .habit-item {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .habit-check {
+    width: 22px; height: 22px; border-radius: 6px;
+    border: 1px solid var(--border2); background: var(--bg3);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all var(--transition); flex-shrink: 0;
+    font-size: 13px;
+  }
+  .habit-check.done { background: var(--accent); border-color: var(--accent); }
+  .habit-info { flex: 1; }
+  .habit-name { font-size: 14px; color: var(--text); }
+  .habit-streak { font-size: 11px; color: var(--text3); }
+  .habit-add {
+    padding: 12px 16px; background: none; border: 1px dashed var(--border2);
+    border-radius: 12px; color: var(--text3); font-family: 'DM Sans', sans-serif;
+    font-size: 13px; cursor: pointer; width: 100%; text-align: center;
+    transition: all var(--transition);
+  }
+  .habit-add:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Conflict section */
+  .conflict-question {
+    font-size: 15px; color: var(--text); margin-bottom: 12px; line-height: 1.5;
+  }
+  textarea {
+    width: 100%; background: var(--bg3); border: 1px solid var(--border);
+    color: var(--text); padding: 12px; border-radius: 10px;
+    font-family: 'DM Sans', sans-serif; font-size: 14px;
+    outline: none; resize: none; min-height: 80px; line-height: 1.6;
+  }
+  textarea:focus { border-color: var(--accent); }
+
+  /* Brain competition viz */
+  .brain-viz {
+    background: var(--bg3); border-radius: 12px; padding: 16px; margin-top: 14px;
+  }
+  .brain-viz-title { font-size: 12px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
+  .brain-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .brain-bar-label { font-size: 12px; color: var(--text2); width: 80px; flex-shrink: 0; }
+  .brain-bar-track { flex: 1; height: 6px; background: var(--bg2); border-radius: 3px; overflow: hidden; }
+  .brain-bar-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+
+  /* Dopamine section */
+  .dopa-stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 14px; }
+  .dopa-stat { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; text-align: center; }
+  .dopa-stat-num { font-size: 20px; font-weight: 300; color: var(--text); }
+  .dopa-stat-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }
+  .dopa-graph { background: var(--bg3); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+  .dopa-bars { display: flex; gap: 4px; align-items: flex-end; height: 60px; }
+  .dopa-bar { flex: 1; border-radius: 3px 3px 0 0; transition: height 0.5s ease; min-height: 4px; }
+  .dopa-labels { display: flex; gap: 4px; margin-top: 6px; }
+  .dopa-day-label { flex: 1; font-size: 9px; color: var(--text3); text-align: center; }
+
+  /* Alert */
+  .alert-box {
+    background: rgba(212,106,106,0.08); border: 1px solid rgba(212,106,106,0.25);
+    border-radius: 12px; padding: 16px; margin-bottom: 14px;
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .alert-icon { font-size: 20px; flex-shrink: 0; }
+  .alert-title { font-size: 14px; color: var(--danger); font-weight: 500; margin-bottom: 4px; }
+  .alert-text { font-size: 13px; color: var(--text2); }
+
+  /* Reset timer */
+  .reset-timer-wrap {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--card-radius); padding: 20px; text-align: center; margin-bottom: 14px;
+  }
+  .reset-timer-num {
+    font-family: 'DM Serif Display', serif; font-size: 48px;
+    color: var(--text); line-height: 1; margin: 10px 0;
+  }
+  .reset-timer-label { font-size: 12px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* Circadian viz */
+  .circadian-wrap { background: var(--bg3); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+  .circadian-track {
+    position: relative; height: 40px; margin: 12px 0 6px;
+  }
+  .circadian-bg {
+    position: absolute; top: 50%; left: 0; right: 0; height: 8px;
+    transform: translateY(-50%); border-radius: 4px;
+    background: linear-gradient(90deg, #1a2540 0%, #6a9fd4 15%, #d4b46a 30%, #d4956a 50%, #d4b46a 70%, #6a9fd4 85%, #1a2540 100%);
+  }
+  .circadian-marker {
+    position: absolute; top: 50%; transform: translate(-50%, -50%);
+    width: 16px; height: 16px; background: var(--accent);
+    border-radius: 50%; box-shadow: 0 0 12px rgba(78,184,160,0.6);
+    border: 2px solid var(--bg);
+  }
+  .circadian-labels { display: flex; justify-content: space-between; }
+  .circadian-label { font-size: 10px; color: var(--text3); }
+
+  /* Science note */
+  .science-note {
+    background: rgba(155,127,212,0.05); border: 1px solid rgba(155,127,212,0.15);
+    border-radius: 10px; padding: 12px 14px; margin-top: 12px;
+    font-size: 12px; color: rgba(155,127,212,0.8); line-height: 1.6;
+    display: none;
+  }
+  .science-note.show { display: block; }
+  .science-note strong { color: var(--purple); }
+
+  /* Save button */
+  .save-btn {
+    width: 100%; padding: 12px; border-radius: 10px;
+    border: 1px solid var(--accent); background: rgba(78,184,160,0.08);
+    color: var(--accent); font-family: 'DM Sans', sans-serif; font-size: 14px;
+    cursor: pointer; transition: all var(--transition); margin-top: 6px;
+    letter-spacing: 0.02em;
+  }
+  .save-btn:hover { background: rgba(78,184,160,0.15); }
+  .save-btn:active { transform: scale(0.99); }
+
+  /* Tag */
+  .tag {
+    display: inline-block; padding: 3px 10px; border-radius: 20px;
+    font-size: 11px; margin-right: 6px; margin-bottom: 4px;
+  }
+  .tag-high { background: rgba(212,106,106,0.1); color: var(--danger); border: 1px solid rgba(212,106,106,0.2); }
+  .tag-low { background: rgba(106,212,160,0.1); color: var(--green); border: 1px solid rgba(106,212,160,0.2); }
+  .tag-med { background: rgba(212,149,106,0.1); color: var(--warm); border: 1px solid rgba(212,149,106,0.2); }
+
+  /* Sleep timing */
+  .time-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .time-field label { font-size: 12px; color: var(--text3); display: block; margin-bottom: 6px; }
+
+  /* Separator */
+  .sep { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+  /* Stim classification */
+  .stim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .stim-card {
+    border-radius: 10px; padding: 12px;
+  }
+  .stim-high { background: rgba(212,106,106,0.06); border: 1px solid rgba(212,106,106,0.15); }
+  .stim-low { background: rgba(106,212,160,0.06); border: 1px solid rgba(106,212,160,0.15); }
+  .stim-title { font-size: 12px; font-weight: 500; margin-bottom: 8px; }
+  .stim-high .stim-title { color: var(--danger); }
+  .stim-low .stim-title { color: var(--green); }
+  .stim-item { font-size: 12px; color: var(--text2); padding: 2px 0; }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: var(--bg3); border: 1px solid var(--border2);
+    border-radius: 10px; padding: 10px 20px; font-size: 13px; color: var(--text);
+    z-index: 999; transition: transform 0.3s ease; white-space: nowrap;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 400px) {
+    .protocol-grid { grid-template-columns: 1fr; }
+    .metrics-grid { grid-template-columns: 1fr 1fr; }
+    .dopa-stat-grid { grid-template-columns: 1fr 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <div class="logo">NeuroBalance <span>peace system</span></div>
+    <div class="header-actions">
+      <label class="science-toggle" onclick="toggleScience()">
+        <span>Neuro</span>
+        <div class="toggle-switch" id="sciToggle"><div class="toggle-knob"></div></div>
+      </label>
+    </div>
+  </header>
+
+  <nav class="nav">
+    <button class="nav-btn active" onclick="showSection('dashboard',this)">Dashboard</button>
+    <button class="nav-btn" onclick="showSection('dopamine',this)">Dopamine</button>
+    <button class="nav-btn" onclick="showSection('protocols',this)">Protocols</button>
+    <button class="nav-btn" onclick="showSection('conflict',this)">Conflict</button>
+    <button class="nav-btn" onclick="showSection('habits',this)">Habits</button>
+    <button class="nav-btn" onclick="showSection('advanced',this)">Advanced</button>
+  </nav>
+
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <section class="section active" id="dashboard">
+      <div class="section-title">Today's State</div>
+      <div class="section-sub" id="dateDisplay">Loading...</div>
+
+      <div id="alertBox" class="alert-box" style="display:none">
+        <div class="alert-icon">⚠️</div>
+        <div>
+          <div class="alert-title">Dopamine Baseline Destabilizing</div>
+          <div class="alert-text">High stimulation + low energy detected. Consider a low-input reset before proceeding.</div>
+        </div>
+      </div>
+
+      <div class="reg-score-wrap">
+        <div class="score-label">Regulation Score</div>
+        <div class="score-number" id="regScore">—</div>
+        <div class="score-status" id="regStatus">Enter today's data below</div>
+      </div>
+
+      <div class="metrics-grid" id="metricsGrid">
+        <div class="metric-card">
+          <div class="metric-label">Energy</div>
+          <div class="metric-value" id="mv-energy">—</div>
+          <div class="metric-bar"><div class="metric-fill" id="mf-energy" style="width:0%;background:var(--accent)"></div></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Emotion</div>
+          <div class="metric-value" id="mv-emotion">—</div>
+          <div class="metric-bar"><div class="metric-fill" id="mf-emotion" style="width:0%;background:var(--warm)"></div></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Craving</div>
+          <div class="metric-value" id="mv-craving">—</div>
+          <div class="metric-bar"><div class="metric-fill" id="mf-craving" style="width:0%;background:var(--purple)"></div></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Stress</div>
+          <div class="metric-value" id="mv-stress">—</div>
+          <div class="metric-bar"><div class="metric-fill" id="mf-stress" style="width:0%;background:var(--danger)"></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Daily Check-in</div>
+        <div class="card-sub">Track your physiological state</div>
+
+        <div class="time-row">
+          <div class="time-field">
+            <label>Bedtime</label>
+            <input type="time" id="bedtime" value="23:00">
+          </div>
+          <div class="time-field">
+            <label>Wake time</label>
+            <input type="time" id="waketime" value="07:00">
+          </div>
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-header"><span class="slider-label">Energy Level</span><span class="slider-val" id="sv-energy">5</span></div>
+          <input type="range" min="1" max="10" value="5" id="sl-energy" oninput="updateSlider('energy',this.value)">
+        </div>
+        <div class="slider-row">
+          <div class="slider-header"><span class="slider-label">Emotional Intensity</span><span class="slider-val" id="sv-emotion">5</span></div>
+          <input type="range" min="1" max="10" value="5" id="sl-emotion" oninput="updateSlider('emotion',this.value)">
+        </div>
+        <div class="slider-row">
+          <div class="slider-header"><span class="slider-label">Dopamine Craving</span><span class="slider-val" id="sv-craving">5</span></div>
+          <input type="range" min="1" max="10" value="5" id="sl-craving" oninput="updateSlider('craving',this.value)">
+        </div>
+        <div class="slider-row">
+          <div class="slider-header"><span class="slider-label">Stress Level</span><span class="slider-val" id="sv-stress">5</span></div>
+          <input type="range" min="1" max="10" value="5" id="sl-stress" oninput="updateSlider('stress',this.value)">
+        </div>
+
+        <div class="science-note show" id="sci-dashboard" style="display:none">
+          <strong>Prefrontal Cortex + ANS Monitoring:</strong> These metrics reflect the interplay between your autonomic nervous system (physiological regulation), limbic system (emotional state), and dopaminergic pathways. Tracking them daily creates metacognitive awareness — the prefrontal cortex's ability to observe and modulate lower brain systems.
+        </div>
+
+        <button class="save-btn" onclick="saveDashboard()">Save Today's State</button>
+      </div>
+    </section>
+
+    <!-- DOPAMINE -->
+    <section class="section" id="dopamine">
+      <div class="section-title">Dopamine Control</div>
+      <div class="section-sub">Monitor and stabilize your reward baseline</div>
+
+      <div class="dopa-stat-grid">
+        <div class="dopa-stat">
+          <div class="dopa-stat-num" id="ds-reels">0h</div>
+          <div class="dopa-stat-label">Reels</div>
+        </div>
+        <div class="dopa-stat">
+          <div class="dopa-stat-num" id="ds-music">0h</div>
+          <div class="dopa-stat-label">Music</div>
+        </div>
+        <div class="dopa-stat">
+          <div class="dopa-stat-num" id="ds-screen">0h</div>
+          <div class="dopa-stat-label">Screen</div>
+        </div>
+      </div>
+
+      <div class="dopa-graph">
+        <div style="font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">Dopamine Exposure · 7 Days</div>
+        <div class="dopa-bars" id="dopaGraph"></div>
+        <div class="dopa-labels" id="dopaLabels"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Today's Usage</div>
+        <div class="card-sub">Log your stimulation time</div>
+
+        <div class="slider-row">
+          <div class="slider-header"><span class="slider-label">Reels / Short video (hrs)</span><span class="slider-val" id="sv-reels">0</span></div>
+          <input type="range" min="0" max="6" step="0.5" value="0" id="sl-reels" oninput="updateDopa('reels',this.value)">
+        </div>
+        <div class="slider-row">
+          <div class="slider-header"><span class="slider-label">Music / Podcast (hrs)</span><span class="slider-val" id="sv-music">0</span></div>
+          <input type="range" min="0" max="8" step="0.5" value="0" id="sl-music" oninput="updateDopa('music',this.value)">
+        </div>
+        <div class="slider-row">
+          <div class="slider-header"><span class="slider-label">Total Screen (hrs)</span><span class="slider-val" id="sv-screen">0</span></div>
+          <input type="range" min="0" max="16" step="0.5" value="0" id="sl-screen" oninput="updateDopa('screen',this.value)">
+        </div>
+        <button class="save-btn" onclick="saveDopa()">Log Usage</button>
+      </div>
+
+      <div class="reset-timer-wrap">
+        <div class="reset-timer-label">Dopamine Reset Timer</div>
+        <div class="reset-timer-num" id="resetTimerDisplay">20:00</div>
+        <div style="display:flex;gap:10px;justify-content:center;margin-top:14px">
+          <button class="timer-btn" onclick="startResetTimer()">Begin Reset</button>
+          <button class="timer-btn" onclick="stopResetTimer()">Stop</button>
+        </div>
+        <div style="font-size:12px;color:var(--text3);margin-top:10px">Step away from all screens for 20 minutes</div>
+        <div class="science-note show" id="sci-dopa" style="display:none">
+          <strong>Dopamine System:</strong> Chronic high-stimulation resets your hedonic baseline — ordinary experiences feel less satisfying. A 20-min low-input break allows the nucleus accumbens to recalibrate. Avoiding dopamine "spikes" preserves motivational drive for meaningful work.
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Stimulation Guide</div>
+        <div class="card-sub">Classify your inputs</div>
+        <div class="stim-grid">
+          <div class="stim-card stim-high">
+            <div class="stim-title">⬆ High Stimulation</div>
+            <div class="stim-item">Short-form video</div>
+            <div class="stim-item">Social media feeds</div>
+            <div class="stim-item">Fast-paced gaming</div>
+            <div class="stim-item">News notifications</div>
+          </div>
+          <div class="stim-card stim-low">
+            <div class="stim-title">⬇ Low Stimulation</div>
+            <div class="stim-item">Walking / nature</div>
+            <div class="stim-item">Slow reading</div>
+            <div class="stim-item">Ambient sound</div>
+            <div class="stim-item">Journaling</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROTOCOLS -->
+    <section class="section" id="protocols">
+      <div class="section-title">Peace Protocols</div>
+      <div class="section-sub">Activate a regulation mode</div>
+
+      <div class="protocol-grid">
+        <div class="protocol-card" id="pc-meditation" onclick="selectProtocol('meditation')">
+          <div class="protocol-icon">🧘</div>
+          <div class="protocol-name">Meditation</div>
+          <div class="protocol-sys">Prefrontal · Limbic</div>
+        </div>
+        <div class="protocol-card" id="pc-recovery" onclick="selectProtocol('recovery')">
+          <div class="protocol-icon">😴</div>
+          <div class="protocol-name">Recovery</div>
+          <div class="protocol-sys">ANS · Circadian</div>
+        </div>
+        <div class="protocol-card" id="pc-completion" onclick="selectProtocol('completion')">
+          <div class="protocol-icon">✅</div>
+          <div class="protocol-name">Completion</div>
+          <div class="protocol-sys">Dopamine · Basal Ganglia</div>
+        </div>
+        <div class="protocol-card" id="pc-nature" onclick="selectProtocol('nature')">
+          <div class="protocol-icon">🌿</div>
+          <div class="protocol-name">Nature Reset</div>
+          <div class="protocol-sys">ANS · Sensory</div>
+        </div>
+      </div>
+
+      <div id="protocol-detail-wrap" style="margin-top:14px;display:none">
+        <div class="card" style="margin:0">
+          <div class="card-title" id="pd-title"></div>
+          <div class="card-sub" id="pd-system"></div>
+          <p id="pd-why" style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:12px"></p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+            <span class="tag tag-med" id="pd-duration"></span>
+            <span class="tag tag-low" id="pd-bio"></span>
+          </div>
+          <div class="protocol-timer">
+            <button class="timer-btn" onclick="startProtocolTimer()">Start</button>
+            <button class="timer-btn" onclick="stopProtocolTimer()">Stop</button>
+            <div class="timer-display" id="protocolTimerDisplay">—</div>
+          </div>
+          <div class="science-note" id="sci-protocol" style="display:none"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONFLICT -->
+    <section class="section" id="conflict">
+      <div class="section-title">Conflict Detection</div>
+      <div class="section-sub">Surface and resolve internal tension</div>
+
+      <div class="card">
+        <div class="conflict-question">What are you currently avoiding?</div>
+        <textarea id="avoiding-text" placeholder="Be specific. What task, conversation, or feeling are you postponing?" rows="3"></textarea>
+      </div>
+
+      <div class="card">
+        <div class="conflict-question">What internal conflict exists right now?</div>
+        <textarea id="conflict-text" placeholder="What does the impulsive part of you want vs. the long-term part?" rows="3"></textarea>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Limbic vs Prefrontal</div>
+        <div class="card-sub">Visualize your brain competition</div>
+        <div class="brain-viz">
+          <div class="brain-viz-title">Current Competition</div>
+          <div class="brain-bar-row">
+            <div class="brain-bar-label" style="font-size:11px;color:var(--warm)">Limbic (now)</div>
+            <div class="brain-bar-track"><div class="brain-bar-fill" id="limbic-bar" style="width:60%;background:var(--warm)"></div></div>
+          </div>
+          <div class="brain-bar-row">
+            <div class="brain-bar-label" style="font-size:11px;color:var(--cool)">Prefrontal (goal)</div>
+            <div class="brain-bar-track"><div class="brain-bar-fill" id="pfc-bar" style="width:40%;background:var(--cool)"></div></div>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:10px">Adjust based on how you're feeling today →</div>
+          <div class="slider-row" style="margin-top:10px;margin-bottom:0">
+            <div class="slider-header"><span class="slider-label">Limbic dominance</span><span class="slider-val" id="limbic-val">6</span></div>
+            <input type="range" min="1" max="10" value="6" id="limbic-slider" oninput="updateBrainViz(this.value)">
+          </div>
+        </div>
+        <div class="science-note" id="sci-conflict" style="display:none">
+          <strong>Limbic System vs Prefrontal Cortex:</strong> Internal conflict arises when the amygdala and limbic system push for immediate reward or avoidance, while the dorsolateral prefrontal cortex tries to maintain goal-directed behavior. Naming the conflict reduces amygdala reactivity through a process called "affect labeling."
+        </div>
+        <button class="save-btn" style="margin-top:14px" onclick="saveConflict()">Reflect & Save</button>
+      </div>
+    </section>
+
+    <!-- HABITS -->
+    <section class="section" id="habits">
+      <div class="section-title">Habit Stabilizer</div>
+      <div class="section-sub">Three anchors. Nothing more.</div>
+
+      <div class="card" style="background:rgba(78,184,160,0.04);border-color:rgba(78,184,160,0.2)">
+        <p style="font-size:13px;color:var(--text2);line-height:1.7">
+          The basal ganglia encode habits through repetition, but overloading it with too many goals creates interference. Three core habits is the neurological optimum for stable encoding without prefrontal overload.
+        </p>
+      </div>
+
+      <div class="habit-list" id="habitList"></div>
+      <div id="habitAddWrap" style="margin-top:10px">
+        <button class="habit-add" onclick="showHabitInput()" id="habitAddBtn">+ Add core habit</button>
+        <div id="habitInputWrap" style="display:none;margin-top:10px">
+          <input type="text" id="habitNameInput" placeholder="e.g. Fixed sleep time, Deep work block, Recovery block" style="margin-bottom:8px">
+          <button class="save-btn" onclick="addHabit()">Add Habit</button>
+        </div>
+      </div>
+
+      <div class="science-note" id="sci-habits" style="display:none;margin-top:14px">
+        <strong>Basal Ganglia Encoding:</strong> Habits are encoded in the striatum through repeated execution. Each repetition strengthens the synaptic pathway (long-term potentiation). Limiting to 3 habits prevents "goal competition" where multiple strong intentions fragment attention and reduce successful encoding for each.
+      </div>
+    </section>
+
+    <!-- ADVANCED -->
+    <section class="section" id="advanced">
+      <div class="section-title">Advanced</div>
+      <div class="section-sub">Deeper system monitoring</div>
+
+      <div class="card">
+        <div class="card-title">Circadian Rhythm</div>
+        <div class="card-sub">Your biological clock position</div>
+        <div class="circadian-wrap">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3)">
+            <span>12am</span><span>6am</span><span>12pm</span><span>6pm</span><span>12am</span>
+          </div>
+          <div class="circadian-track">
+            <div class="circadian-bg"></div>
+            <div class="circadian-marker" id="circadianMarker"></div>
+          </div>
+          <div style="font-size:12px;color:var(--text2);text-align:center" id="circadianStatus">Calculating...</div>
+        </div>
+        <div class="science-note" id="sci-circadian" style="display:none">
+          <strong>Suprachiasmatic Nucleus (SCN):</strong> Your master clock in the hypothalamus regulates virtually every physiological process on a ~24h cycle. Light exposure (especially morning light) sets the clock. Irregular sleep timing disrupts cortisol, melatonin, and body temperature rhythms — all of which affect mood and cognition.
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Stress Load Estimator</div>
+        <div class="card-sub">Cumulative allostatic load</div>
+        <div id="stressLoadViz" style="background:var(--bg3);border-radius:12px;padding:16px">
+          <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">
+            <div style="flex:1">
+              <div style="font-size:12px;color:var(--text3);margin-bottom:6px">Current Load</div>
+              <div style="height:8px;background:var(--bg2);border-radius:4px;overflow:hidden">
+                <div id="stressLoadBar" style="height:100%;width:50%;background:linear-gradient(90deg,var(--accent),var(--warm));border-radius:4px;transition:width .5s"></div>
+              </div>
+            </div>
+            <div style="font-size:22px;font-weight:300;color:var(--text)" id="stressLoadVal">—</div>
+          </div>
+          <div style="font-size:12px;color:var(--text3)" id="stressLoadLabel">Log daily data to estimate load</div>
+        </div>
+        <div class="science-note" id="sci-stress" style="display:none">
+          <strong>Allostatic Load:</strong> The cumulative "wear and tear" on your physiological systems from chronic stress. Measured through cortisol levels, HRV (heart rate variability), sleep quality, and inflammatory markers. High allostatic load impairs hippocampal neurogenesis and working memory.
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Dopamine Exposure Graph</div>
+        <div class="card-sub">Week-over-week stimulation pattern</div>
+        <div style="background:var(--bg3);border-radius:12px;padding:16px" id="dopaWeekGraph">
+          <div class="dopa-bars" id="dopaWeekBars" style="height:80px"></div>
+          <div class="dopa-labels" id="dopaWeekLabels"></div>
+          <div style="margin-top:10px;font-size:12px;color:var(--text3)">
+            <span style="color:var(--danger)">■</span> High exposure &nbsp;
+            <span style="color:var(--accent)">■</span> Balanced &nbsp;
+            <span style="color:var(--cool)">■</span> Low exposure
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ---- STATE ----
+let state = JSON.parse(localStorage.getItem('nb_state') || '{}');
+let scienceMode = false;
+let protocolTimer = null;
+let resetTimer = null;
+let protocolSeconds = 0;
+let resetSeconds = 1200;
+let activeProtocol = null;
+
+// ---- INIT ----
+const protocols = {
+  meditation: {
+    name: 'Meditation Mode',
+    system: 'Prefrontal Cortex + Limbic System Regulation',
+    why: 'Focused attention meditation increases gray matter density in the prefrontal cortex and reduces amygdala reactivity. Even 10–20 minutes reduces cortisol and activates the parasympathetic nervous system.',
+    duration: '10–20 minutes',
+    bio: 'Reduces cortisol · Activates PNS',
+    science: '<strong>Default Mode Network (DMN):</strong> Meditation quiets the DMN — the brain\'s "resting state" network associated with rumination and self-referential thought. This reduces limbic activation and strengthens prefrontal-amygdala inhibitory control. Regular practice literally rewires the threat-detection circuitry.',
+    seconds: 1200
+  },
+  recovery: {
+    name: 'Recovery Mode',
+    system: 'Autonomic Nervous System + Circadian Alignment',
+    why: 'Sleep architecture depends on consistent circadian timing. A short nap (10–20 min) taken 7–8 hrs after waking restores alertness without entering slow-wave sleep, avoiding grogginess while reducing adenosine buildup.',
+    duration: '20 min nap or 8h sleep',
+    bio: 'Clears adenosine · Restores HRV',
+    science: '<strong>Adenosine Clearance:</strong> Sleep pressure builds through adenosine accumulation in the basal forebrain. Recovery rest (even non-sleep) allows partial clearance. The ANS shifts toward parasympathetic dominance, reducing heart rate and promoting cellular repair.',
+    seconds: 1200
+  },
+  completion: {
+    name: 'Completion Mode',
+    system: 'Dopamine System + Basal Ganglia',
+    why: 'Finishing a task triggers a dopamine release in the nucleus accumbens — but only if the task was genuinely completed. This mode encourages closing open loops rather than starting new ones, stabilizing baseline dopamine.',
+    duration: '25–50 minutes',
+    bio: 'Closes loops · Stabilizes dopamine',
+    science: '<strong>Zeigarnik Effect + Dopamine:</strong> Unfinished tasks occupy working memory and generate low-level stress. Completion triggers dopaminergic reward and allows the basal ganglia to encode the completed behavior as successful — reinforcing deep work patterns over time.',
+    seconds: 1500
+  },
+  nature: {
+    name: 'Nature Reset Mode',
+    system: 'Autonomic Nervous System + Sensory Cortex',
+    why: 'Low-input sensory environments (trees, water, open space) trigger involuntary attention — a restorative mental mode that reduces directed attention fatigue. 20 minutes in nature measurably lowers cortisol.',
+    duration: '20–40 minutes',
+    bio: 'Lowers cortisol · Restores attention',
+    science: '<strong>Attention Restoration Theory:</strong> Natural environments engage the brain\'s restorative mode by providing soft fascination — effortless, low-demand stimulation. This allows the prefrontal cortex\'s directed attention system to recover, replenishing the cognitive resources that enable self-regulation.',
+    seconds: 1800
+  }
+};
+
+function init() {
+  document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  loadDashboard();
+  loadHabits();
+  buildDopaGraph();
+  buildDopaWeekGraph();
+  updateCircadian();
+  updateStressLoad();
+  setInterval(updateCircadian, 60000);
+}
+
+// ---- SCIENCE MODE ----
+function toggleScience() {
+  scienceMode = !scienceMode;
+  const t = document.getElementById('sciToggle');
+  t.classList.toggle('on', scienceMode);
+  document.querySelectorAll('.science-note').forEach(n => n.style.display = scienceMode ? 'block' : 'none');
+}
+
+// ---- NAVIGATION ----
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ---- SLIDER ----
+function updateSlider(key, val) {
+  document.getElementById('sv-'+key).textContent = val;
+}
+
+// ---- DASHBOARD ----
+function saveDashboard() {
+  const data = {
+    bedtime: document.getElementById('bedtime').value,
+    waketime: document.getElementById('waketime').value,
+    energy: +document.getElementById('sl-energy').value,
+    emotion: +document.getElementById('sl-emotion').value,
+    craving: +document.getElementById('sl-craving').value,
+    stress: +document.getElementById('sl-stress').value,
+    date: new Date().toDateString()
+  };
+  state.dashboard = data;
+  localStorage.setItem('nb_state', JSON.stringify(state));
+  updateMetrics(data);
+  calcRegScore(data);
+  checkAlert(data);
+  showToast('State saved ✓');
+}
+
+function loadDashboard() {
+  if (!state.dashboard) return;
+  const d = state.dashboard;
+  document.getElementById('sl-energy').value = d.energy;
+  document.getElementById('sl-emotion').value = d.emotion;
+  document.getElementById('sl-craving').value = d.craving;
+  document.getElementById('sl-stress').value = d.stress;
+  ['energy','emotion','craving','stress'].forEach(k => document.getElementById('sv-'+k).textContent = d[k]);
+  if (d.bedtime) document.getElementById('bedtime').value = d.bedtime;
+  if (d.waketime) document.getElementById('waketime').value = d.waketime;
+  updateMetrics(d);
+  calcRegScore(d);
+  checkAlert(d);
+}
+
+function updateMetrics(d) {
+  const keys = ['energy','emotion','craving','stress'];
+  keys.forEach(k => {
+    document.getElementById('mv-'+k).textContent = d[k]+'/10';
+    document.getElementById('mf-'+k).style.width = (d[k]*10)+'%';
+  });
+}
+
+function calcRegScore(d) {
+  // Score: high energy good, low craving good, low stress good, moderate emotion good
+  const s = Math.round(
+    d.energy * 8 +
+    (10 - d.craving) * 8 +
+    (10 - d.stress) * 9 +
+    (10 - Math.abs(d.emotion - 5)) * 5
+  );
+  const max = 10*8+10*8+10*9+5*5;
+  const pct = Math.round((s/max)*100);
+  document.getElementById('regScore').textContent = pct;
+  let status, color;
+  if (pct >= 75) { status = 'Well Regulated'; color = 'var(--accent)'; }
+  else if (pct >= 50) { status = 'Moderately Regulated'; color = 'var(--warm)'; }
+  else { status = 'Needs Attention'; color = 'var(--danger)'; }
+  document.getElementById('regStatus').textContent = status;
+  document.getElementById('regScore').style.color = color;
+  document.getElementById('regScore').style.textShadow = '0 0 40px '+color+'55';
+  updateStressLoad();
+}
+
+function checkAlert(d) {
+  const show = d.craving >= 7 && d.energy <= 4;
+  document.getElementById('alertBox').style.display = show ? 'flex' : 'none';
+}
+
+// ---- DOPAMINE ----
+function updateDopa(key, val) {
+  document.getElementById('sv-'+key).textContent = val+'h';
+  document.getElementById('ds-'+key).textContent = val+'h';
+}
+
+function saveDopa() {
+  const data = {
+    reels: +document.getElementById('sl-reels').value,
+    music: +document.getElementById('sl-music').value,
+    screen: +document.getElementById('sl-screen').value,
+    date: new Date().toDateString()
+  };
+  if (!state.dopaHistory) state.dopaHistory = [];
+  const today = state.dopaHistory.find(d => d.date === data.date);
+  if (today) Object.assign(today, data);
+  else state.dopaHistory.push(data);
+  if (state.dopaHistory.length > 7) state.dopaHistory = state.dopaHistory.slice(-7);
+  state.dopamine = data;
+  localStorage.setItem('nb_state', JSON.stringify(state));
+  buildDopaGraph();
+  buildDopaWeekGraph();
+  showToast('Usage logged ✓');
+}
+
+function buildDopaGraph() {
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const history = state.dopaHistory || [];
+  const container = document.getElementById('dopaGraph');
+  const labelsEl = document.getElementById('dopaLabels');
+  if (!container) return;
+  container.innerHTML = '';
+  labelsEl.innerHTML = '';
+  for (let i = 0; i < 7; i++) {
+    const entry = history[i] || { screen: Math.random()*6+1 };
+    const score = Math.min(entry.screen || 0, 12);
+    const pct = (score/12)*100;
+    const color = pct > 66 ? 'var(--danger)' : pct > 33 ? 'var(--warm)' : 'var(--accent)';
+    const bar = document.createElement('div');
+    bar.className = 'dopa-bar';
+    bar.style.cssText = `height:${pct}%;background:${color};opacity:${i<history.length?1:0.3}`;
+    container.appendChild(bar);
+    const label = document.createElement('div');
+    label.className = 'dopa-day-label';
+    label.textContent = days[i];
+    labelsEl.appendChild(label);
+  }
+}
+
+function buildDopaWeekGraph() {
+  const days = ['M','T','W','T','F','S','S'];
+  const history = state.dopaHistory || [];
+  const container = document.getElementById('dopaWeekBars');
+  const labelsEl = document.getElementById('dopaWeekLabels');
+  if (!container) return;
+  container.innerHTML = '';
+  labelsEl.innerHTML = '';
+  for (let i = 0; i < 7; i++) {
+    const entry = history[i] || { screen: Math.random()*8+1 };
+    const score = Math.min(entry.screen || 0, 12);
+    const pct = (score/12)*100;
+    const color = pct > 66 ? 'var(--danger)' : pct > 33 ? 'var(--accent)' : 'var(--cool)';
+    const bar = document.createElement('div');
+    bar.className = 'dopa-bar';
+    bar.style.cssText = `height:${pct}%;background:${color};opacity:${i<history.length?1:0.2}`;
+    container.appendChild(bar);
+    const label = document.createElement('div');
+    label.className = 'dopa-day-label';
+    label.textContent = days[i];
+    labelsEl.appendChild(label);
+  }
+}
+
+// Reset timer
+function startResetTimer() {
+  stopResetTimer();
+  resetSeconds = 1200;
+  resetTimer = setInterval(() => {
+    resetSeconds--;
+    if (resetSeconds <= 0) { stopResetTimer(); showToast('Reset complete 🌿'); return; }
+    const m = Math.floor(resetSeconds/60).toString().padStart(2,'0');
+    const s = (resetSeconds%60).toString().padStart(2,'0');
+    document.getElementById('resetTimerDisplay').textContent = m+':'+s;
+  }, 1000);
+}
+function stopResetTimer() {
+  if (resetTimer) { clearInterval(resetTimer); resetTimer = null; }
+  document.getElementById('resetTimerDisplay').textContent = '20:00';
+  resetSeconds = 1200;
+}
+
+// ---- PROTOCOLS ----
+function selectProtocol(key) {
+  activeProtocol = key;
+  document.querySelectorAll('.protocol-card').forEach(c => c.classList.remove('active'));
+  document.getElementById('pc-'+key).classList.add('active');
+  const p = protocols[key];
+  document.getElementById('pd-title').textContent = p.name;
+  document.getElementById('pd-system').textContent = p.system;
+  document.getElementById('pd-why').textContent = p.why;
+  document.getElementById('pd-duration').textContent = '⏱ ' + p.duration;
+  document.getElementById('pd-bio').textContent = p.bio;
+  const sciEl = document.getElementById('sci-protocol');
+  sciEl.innerHTML = p.science;
+  sciEl.style.display = scienceMode ? 'block' : 'none';
+  document.getElementById('protocolTimerDisplay').textContent = '—';
+  document.getElementById('protocol-detail-wrap').style.display = 'block';
+  stopProtocolTimer();
+}
+
+function startProtocolTimer() {
+  if (!activeProtocol) return;
+  stopProtocolTimer();
+  protocolSeconds = protocols[activeProtocol].seconds;
+  protocolTimer = setInterval(() => {
+    protocolSeconds--;
+    if (protocolSeconds <= 0) { stopProtocolTimer(); showToast('Protocol complete ✓'); return; }
+    const m = Math.floor(protocolSeconds/60).toString().padStart(2,'0');
+    const s = (protocolSeconds%60).toString().padStart(2,'0');
+    document.getElementById('protocolTimerDisplay').textContent = m+':'+s;
+  }, 1000);
+}
+function stopProtocolTimer() {
+  if (protocolTimer) { clearInterval(protocolTimer); protocolTimer = null; }
+}
+
+// ---- CONFLICT ----
+function updateBrainViz(val) {
+  const v = +val;
+  document.getElementById('limbic-val').textContent = v;
+  document.getElementById('limbic-bar').style.width = (v*10)+'%';
+  document.getElementById('pfc-bar').style.width = ((11-v)*10)+'%';
+}
+
+function saveConflict() {
+  state.conflict = {
+    avoiding: document.getElementById('avoiding-text').value,
+    conflict: document.getElementById('conflict-text').value,
+    limbic: document.getElementById('limbic-slider').value,
+    date: new Date().toDateString()
+  };
+  localStorage.setItem('nb_state', JSON.stringify(state));
+  showToast('Reflection saved ✓');
+}
+
+// ---- HABITS ----
+function loadHabits() {
+  if (!state.habits) state.habits = [];
+  renderHabits();
+}
+
+function renderHabits() {
+  const list = document.getElementById('habitList');
+  list.innerHTML = '';
+  const today = new Date().toDateString();
+  state.habits.forEach((h, i) => {
+    const done = h.lastDone === today;
+    const div = document.createElement('div');
+    div.className = 'habit-item';
+    div.innerHTML = `
+      <div class="habit-check ${done?'done':''}" onclick="toggleHabit(${i})">
+        ${done?'✓':''}
+      </div>
+      <div class="habit-info">
+        <div class="habit-name">${h.name}</div>
+        <div class="habit-streak">🔥 ${h.streak || 0} day streak</div>
+      </div>
+      <div style="font-size:12px;color:var(--text3);cursor:pointer" onclick="removeHabit(${i})">✕</div>
+    `;
+    list.appendChild(div);
+  });
+  const addBtn = document.getElementById('habitAddBtn');
+  if (addBtn) addBtn.style.display = state.habits.length >= 3 ? 'none' : 'block';
+  // Show science note if enabled
+  const sn = document.getElementById('sci-habits');
+  if (sn) sn.style.display = scienceMode ? 'block' : 'none';
+}
+
+function toggleHabit(i) {
+  const today = new Date().toDateString();
+  const yesterday = new Date(Date.now()-86400000).toDateString();
+  const h = state.habits[i];
+  if (h.lastDone === today) { h.lastDone = null; }
+  else {
+    if (h.lastDone === yesterday) h.streak = (h.streak||0)+1;
+    else h.streak = 1;
+    h.lastDone = today;
+  }
+  localStorage.setItem('nb_state', JSON.stringify(state));
+  renderHabits();
+}
+
+function removeHabit(i) {
+  state.habits.splice(i,1);
+  localStorage.setItem('nb_state', JSON.stringify(state));
+  renderHabits();
+}
+
+function showHabitInput() {
+  document.getElementById('habitInputWrap').style.display = 'block';
+  document.getElementById('habitAddBtn').style.display = 'none';
+}
+
+function addHabit() {
+  const name = document.getElementById('habitNameInput').value.trim();
+  if (!name) return;
+  if (state.habits.length >= 3) { showToast('Maximum 3 habits reached'); return; }
+  state.habits.push({ name, streak: 0, lastDone: null });
+  localStorage.setItem('nb_state', JSON.stringify(state));
+  document.getElementById('habitNameInput').value = '';
+  document.getElementById('habitInputWrap').style.display = 'none';
+  renderHabits();
+  showToast('Habit added ✓');
+}
+
+// ---- ADVANCED ----
+function updateCircadian() {
+  const now = new Date();
+  const hours = now.getHours() + now.getMinutes()/60;
+  const pct = (hours/24)*100;
+  const marker = document.getElementById('circadianMarker');
+  if (marker) marker.style.left = pct+'%';
+  let status;
+  if (hours >= 22 || hours < 6) status = '🌙 Sleep window · Low cortisol phase';
+  else if (hours < 10) status = '☀️ Cortisol peak · Ideal for complex thinking';
+  else if (hours < 14) status = '⚡ Cognitive peak · Deep work window';
+  else if (hours < 17) status = '🔄 Alertness dip · Light recovery suggested';
+  else if (hours < 20) status = '💡 Second wind · Creative or social work';
+  else status = '🌅 Wind-down phase · Reduce stimulation';
+  const statusEl = document.getElementById('circadianStatus');
+  if (statusEl) statusEl.textContent = now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) + ' · ' + status;
+}
+
+function updateStressLoad() {
+  if (!state.dashboard) return;
+  const d = state.dashboard;
+  const load = Math.round((d.stress*0.4 + d.craving*0.3 + d.emotion*0.3));
+  const pct = (load/10)*100;
+  const bar = document.getElementById('stressLoadBar');
+  const val = document.getElementById('stressLoadVal');
+  const label = document.getElementById('stressLoadLabel');
+  if (bar) bar.style.width = pct+'%';
+  if (val) val.textContent = load+'/10';
+  if (label) {
+    if (load <= 3) label.textContent = 'Low allostatic load · System recovering well';
+    else if (load <= 6) label.textContent = 'Moderate load · Monitor and reduce inputs';
+    else label.textContent = 'High allostatic load · Prioritize recovery now';
+  }
+}
+
+// ---- TOAST ----
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ---- SERVICE WORKER ----
+if ('serviceWorker' in navigator) {
+  var swBase = window.location.pathname.replace(/\/[^\/]*$/, '') || '/';
+  if (!swBase.endsWith('/')) swBase += '/';
+  navigator.serviceWorker.register(swBase + 'sw.js', { scope: swBase })
+    .then(reg => console.log('SW registered, scope:', reg.scope))
+    .catch(err => console.log('SW error:', err));
+}
+
+init();
+</script>
+</body>
+</html>
